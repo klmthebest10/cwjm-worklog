@@ -1,0 +1,263 @@
+<!doctype html>
+<html lang="ko" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
+  <title>창원정밀 작업일보</title>
+  <meta name="description" content="창원정밀 설비·생산 일일 작업 기록">
+  <meta name="theme-color" content="#f4efe6">
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" type="image/png" href="icons/icon-192.png">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="작업일보">
+  <link rel="stylesheet" href="style.css">
+  <script>
+    // Terapkan tema sebelum render agar tidak berkedip
+    try {
+      var p = JSON.parse(localStorage.getItem('cwjm_prefs_v1') || '{}');
+      var t = p.theme || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+      document.documentElement.dataset.theme = t;
+    } catch (e) {}
+  </script>
+</head>
+<body>
+
+  <!-- ============ TOP BAR ============ -->
+  <header class="topbar">
+    <div class="brand">
+      <span class="logo" aria-hidden="true">CW</span>
+      <div class="brand-text">
+        <h1>창원정밀 작업일보</h1>
+        <p class="sub">일일 설비 · 생산 기록</p>
+      </div>
+    </div>
+    <div class="top-actions">
+      <button id="syncPill" class="sync-pill s-local" type="button" title="동기화 상태">
+        <i class="dot" aria-hidden="true"></i><span id="syncText">서버 미연결</span>
+      </button>
+      <button id="installBtn" class="btn btn-sm btn-sky" type="button" hidden>⬇<span class="install-txt"> 앱 설치</span></button>
+      <button id="settingsBtn" class="btn btn-sm btn-icon" type="button" aria-label="서버 설정" title="서버 설정">⚙</button>
+      <button id="themeBtn" class="btn btn-sm btn-icon" type="button" aria-label="라이트/다크 모드 전환" title="라이트/다크 모드">
+        <span class="ico-moon" aria-hidden="true">☾</span>
+        <span class="ico-sun" aria-hidden="true">☀</span>
+      </button>
+    </div>
+  </header>
+
+  <main id="main">
+
+    <!-- ============ FORM ============ -->
+    <form id="logForm" novalidate autocomplete="off">
+
+      <!-- Header laporan -->
+      <section class="card card-context">
+        <div class="card-head">
+          <span class="tag">01</span>
+          <h2>보고서 정보</h2>
+        </div>
+        <div class="ctx-grid">
+          <label class="field">
+            <span class="lbl">날짜 <i class="req">*</i></span>
+            <input type="date" id="f_date" name="date" required>
+          </label>
+          <div class="field">
+            <span class="lbl">근무 구분</span>
+            <div class="seg" role="radiogroup" aria-label="근무 구분">
+              <label><input type="radio" name="shift" value="주간" checked><span>☀ 주간</span></label>
+              <label><input type="radio" name="shift" value="야간"><span>☾ 야간</span></label>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <div class="form-grid">
+        <!-- Info kerja -->
+        <section class="card">
+          <div class="card-head">
+            <span class="tag tag-mint">02</span>
+            <h2>작업 정보</h2>
+          </div>
+          <div class="info-grid">
+            <label class="field">
+              <span class="lbl">작업자 <i class="req">*</i></span>
+              <input type="text" name="worker" list="dl_worker" placeholder="이름" enterkeyhint="next" data-nav>
+            </label>
+            <label class="field">
+              <span class="lbl">설비명 <i class="req">*</i></span>
+              <input type="text" name="machine" list="dl_machine" placeholder="예: MCT-01" enterkeyhint="next" data-nav>
+            </label>
+            <label class="field">
+              <span class="lbl">품명 <i class="req">*</i></span>
+              <input type="text" name="item" list="dl_item" placeholder="제품 / 부품명" enterkeyhint="next" data-nav>
+            </label>
+            <label class="field">
+              <span class="lbl">발주처</span>
+              <input type="text" name="client" list="dl_client" placeholder="발주 회사명" enterkeyhint="next" data-nav>
+            </label>
+            <label class="field span2">
+              <span class="lbl">생산 현황</span>
+              <input type="text" name="process" list="dl_process" placeholder="예: OP10 황삭, 2공정 가공" enterkeyhint="next" data-nav>
+            </label>
+          </div>
+        </section>
+
+        <!-- Kuantitas & waktu -->
+        <section class="card">
+          <div class="card-head">
+            <span class="tag tag-peach">03</span>
+            <h2>수량 · 시간</h2>
+          </div>
+          <div class="row2">
+            <div class="field">
+              <span class="lbl">양품</span>
+              <div class="stepper good">
+                <button type="button" data-step="-1" data-target="good" aria-label="양품 감소">−</button>
+                <input type="number" name="good" inputmode="numeric" min="0" step="1" value="0" enterkeyhint="next" data-nav>
+                <button type="button" data-step="1" data-target="good" aria-label="양품 증가">+</button>
+              </div>
+            </div>
+            <div class="field">
+              <span class="lbl">불량</span>
+              <div class="stepper bad">
+                <button type="button" data-step="-1" data-target="bad" aria-label="불량 감소">−</button>
+                <input type="number" name="bad" inputmode="numeric" min="0" step="1" value="0" enterkeyhint="next" data-nav>
+                <button type="button" data-step="1" data-target="bad" aria-label="불량 증가">+</button>
+              </div>
+            </div>
+          </div>
+          <div class="row2">
+            <label class="field">
+              <span class="lbl">시작 <i class="req">*</i></span>
+              <input type="time" name="start" data-nav>
+            </label>
+            <label class="field">
+              <span class="lbl">종료 <i class="req">*</i></span>
+              <input type="time" name="end" data-nav>
+            </label>
+          </div>
+          <div class="duration" id="durationBox">
+            <span>작업 시간</span>
+            <b id="durationVal">—</b>
+          </div>
+        </section>
+
+        <!-- Keterangan -->
+        <section class="card card-wide">
+          <div class="card-head">
+            <span class="tag tag-lav">04</span>
+            <h2>정지 내역 및 비고</h2>
+          </div>
+          <label class="field">
+            <span class="lbl sr-only">정지 내역 및 비고</span>
+            <textarea name="remark" rows="4" placeholder="설비 정지 사유, 공구 교체, 특이사항 등"></textarea>
+          </label>
+        </section>
+      </div>
+
+      <div class="submit-bar">
+        <button type="button" id="resetBtn" class="btn btn-ghost">초기화</button>
+        <button type="submit" class="btn btn-primary btn-lg">저장하기 ✓</button>
+      </div>
+    </form>
+
+    <!-- ============ HISTORY ============ -->
+    <section class="card history" id="history">
+      <div class="card-head hist-head">
+        <div class="hist-title">
+          <span class="tag tag-sky">05</span>
+          <h2>작업 이력</h2>
+        </div>
+        <button type="button" id="copyAllBtn" class="btn btn-sm btn-lemon">📋 전체 복사</button>
+      </div>
+
+      <div class="filters">
+        <label class="field">
+          <span class="lbl">시작일</span>
+          <input type="date" id="fFrom">
+        </label>
+        <label class="field">
+          <span class="lbl">종료일</span>
+          <input type="date" id="fTo">
+        </label>
+        <div class="field f-shift">
+          <span class="lbl">근무</span>
+          <div class="seg seg-3" role="radiogroup" aria-label="근무 필터">
+            <label><input type="radio" name="fshift" value="all" checked><span>전체</span></label>
+            <label><input type="radio" name="fshift" value="주간"><span>주간</span></label>
+            <label><input type="radio" name="fshift" value="야간"><span>야간</span></label>
+          </div>
+        </div>
+        <div class="field f-today">
+          <span class="lbl">&nbsp;</span>
+          <button type="button" id="todayBtn" class="btn">오늘</button>
+        </div>
+      </div>
+
+      <div class="stats" id="stats"></div>
+
+      <div class="table-wrap" id="tableWrap">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>날짜</th>
+              <th>근무</th>
+              <th>작업자</th>
+              <th>설비명</th>
+              <th>품명</th>
+              <th>발주처</th>
+              <th>생산 현황</th>
+              <th class="num">양품</th>
+              <th class="num">불량</th>
+              <th>시작</th>
+              <th>종료</th>
+              <th>정지 내역 및 비고</th>
+              <th class="actions-th">Action</th>
+            </tr>
+          </thead>
+          <tbody id="tbody"></tbody>
+        </table>
+      </div>
+
+      <div class="mobile-list" id="mobileList"></div>
+
+      <div class="empty" id="emptyState" hidden>
+        <div class="empty-ico">🗂</div>
+        <p>선택한 기간에 기록이 없습니다.</p>
+      </div>
+    </section>
+
+    <p class="foot">데이터는 공장 서버(Supabase)에 저장되어 모든 기기에서 공유됩니다. 오프라인일 때 입력한 기록은 연결되면 자동 전송됩니다.</p>
+  </main>
+
+  <datalist id="dl_worker"></datalist>
+  <datalist id="dl_machine"></datalist>
+  <datalist id="dl_item"></datalist>
+  <datalist id="dl_client"></datalist>
+  <datalist id="dl_process"></datalist>
+
+  <!-- Toast -->
+  <div id="toasts" class="toasts" aria-live="polite" aria-atomic="true"></div>
+
+  <!-- Custom modal (pengganti alert/confirm) -->
+  <div id="modal" class="modal" hidden role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="modal-box">
+      <div class="modal-head">
+        <span class="modal-ico" id="modalIco">i</span>
+        <h3 id="modalTitle">알림</h3>
+      </div>
+      <div class="modal-body" id="modalMsg"></div>
+      <div class="modal-actions">
+        <button type="button" class="btn" id="modalCancel">취소</button>
+        <button type="button" class="btn btn-primary" id="modalOk">확인</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="config.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

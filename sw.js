@@ -1,7 +1,7 @@
 /* Service worker — 창원정밀 작업일보
    Ganti CACHE versi setiap kali file diperbarui.
    Request ke Supabase (beda origin) tidak disentuh. */
-const CACHE = 'cwjm-worklog-v2';
+const CACHE = 'cwjm-worklog-v3';
 const ASSETS = [
   './',
   './index.html',

@@ -18,6 +18,14 @@ Pilih salah satu cara:
 Upload seluruh folder ke hosting HTTPS (mis. GitHub Pages). Setelah file diubah,
 naikkan versi `CACHE` di `sw.js` agar perangkat mengambil versi baru.
 
+## Cara pakai
+- Pilih **날짜** dan **주간/야간** di atas → satu lembar 작업일보.
+- Isi tabel seperti form kertas. Baris **＋** paling bawah = baris baru; begitu diisi, baris berikutnya muncul otomatis
+  (작업자, 설비명 dan 시작 diisi dari baris sebelumnya).
+- 시간(분) = 종료 − 시작, 순작업시간(분) = 시간 − 비가동시간 (dihitung otomatis).
+- Semua isian tersimpan otomatis dan bisa diedit kapan saja. Tombol 🗑 menghapus baris (ada konfirmasi).
+- **Copy per kolom:** tombol 📋 di judul kolom (PC) atau chip "열 복사" (HP). Kolom yang sudah disalin berwarna hijau.
+
 ## Cara kerja sinkron
 - Semua perangkat membaca/menulis tabel `public.worklog` yang sama.
 - Perangkat lain menampilkan data baru dalam ±10 detik (dan saat aplikasi dibuka kembali).

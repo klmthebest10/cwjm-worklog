@@ -15,7 +15,6 @@
   <meta name="apple-mobile-web-app-title" content="작업일보">
   <link rel="stylesheet" href="style.css">
   <script>
-    // Terapkan tema sebelum render agar tidak berkedip
     try {
       var p = JSON.parse(localStorage.getItem('cwjm_prefs_v1') || '{}');
       var t = p.theme || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
@@ -49,188 +48,79 @@
 
   <main id="main">
 
-    <!-- ============ FORM ============ -->
-    <form id="logForm" novalidate autocomplete="off">
-
-      <!-- Header laporan -->
-      <section class="card card-context">
-        <div class="card-head">
-          <span class="tag">01</span>
-          <h2>보고서 정보</h2>
-        </div>
-        <div class="ctx-grid">
-          <label class="field">
-            <span class="lbl">날짜 <i class="req">*</i></span>
-            <input type="date" id="f_date" name="date" required>
-          </label>
-          <div class="field">
-            <span class="lbl">근무 구분</span>
-            <div class="seg" role="radiogroup" aria-label="근무 구분">
-              <label><input type="radio" name="shift" value="주간" checked><span>☀ 주간</span></label>
-              <label><input type="radio" name="shift" value="야간"><span>☾ 야간</span></label>
-            </div>
+    <!-- ============ HEADER LAPORAN ============ -->
+    <section class="card sheet-head">
+      <div class="head-top">
+        <div class="company">업체명 <b>창원정밀</b></div>
+        <h2 class="doc-title">작업일보 <span id="docDate"></span></h2>
+      </div>
+      <div class="head-ctrl">
+        <div class="field">
+          <span class="lbl">날짜</span>
+          <div class="date-nav">
+            <button type="button" class="btn btn-icon" id="prevDay" aria-label="이전 날짜">◀</button>
+            <input type="date" id="sheetDate" aria-label="날짜">
+            <button type="button" class="btn btn-icon" id="nextDay" aria-label="다음 날짜">▶</button>
+            <button type="button" class="btn" id="todayBtn">오늘</button>
           </div>
         </div>
-      </section>
-
-      <div class="form-grid">
-        <!-- Info kerja -->
-        <section class="card">
-          <div class="card-head">
-            <span class="tag tag-mint">02</span>
-            <h2>작업 정보</h2>
-          </div>
-          <div class="info-grid">
-            <label class="field">
-              <span class="lbl">작업자 <i class="req">*</i></span>
-              <input type="text" name="worker" list="dl_worker" placeholder="이름" enterkeyhint="next" data-nav>
-            </label>
-            <label class="field">
-              <span class="lbl">설비명 <i class="req">*</i></span>
-              <input type="text" name="machine" list="dl_machine" placeholder="예: MCT-01" enterkeyhint="next" data-nav>
-            </label>
-            <label class="field">
-              <span class="lbl">품명 <i class="req">*</i></span>
-              <input type="text" name="item" list="dl_item" placeholder="제품 / 부품명" enterkeyhint="next" data-nav>
-            </label>
-            <label class="field">
-              <span class="lbl">발주처</span>
-              <input type="text" name="client" list="dl_client" placeholder="발주 회사명" enterkeyhint="next" data-nav>
-            </label>
-            <label class="field span2">
-              <span class="lbl">생산 현황</span>
-              <input type="text" name="process" list="dl_process" placeholder="예: OP10 황삭, 2공정 가공" enterkeyhint="next" data-nav>
-            </label>
-          </div>
-        </section>
-
-        <!-- Kuantitas & waktu -->
-        <section class="card">
-          <div class="card-head">
-            <span class="tag tag-peach">03</span>
-            <h2>수량 · 시간</h2>
-          </div>
-          <div class="row2">
-            <div class="field">
-              <span class="lbl">양품</span>
-              <div class="stepper good">
-                <button type="button" data-step="-1" data-target="good" aria-label="양품 감소">−</button>
-                <input type="number" name="good" inputmode="numeric" min="0" step="1" value="0" enterkeyhint="next" data-nav>
-                <button type="button" data-step="1" data-target="good" aria-label="양품 증가">+</button>
-              </div>
-            </div>
-            <div class="field">
-              <span class="lbl">불량</span>
-              <div class="stepper bad">
-                <button type="button" data-step="-1" data-target="bad" aria-label="불량 감소">−</button>
-                <input type="number" name="bad" inputmode="numeric" min="0" step="1" value="0" enterkeyhint="next" data-nav>
-                <button type="button" data-step="1" data-target="bad" aria-label="불량 증가">+</button>
-              </div>
-            </div>
-          </div>
-          <div class="row2">
-            <label class="field">
-              <span class="lbl">시작 <i class="req">*</i></span>
-              <input type="time" name="start" data-nav>
-            </label>
-            <label class="field">
-              <span class="lbl">종료 <i class="req">*</i></span>
-              <input type="time" name="end" data-nav>
-            </label>
-          </div>
-          <div class="duration" id="durationBox">
-            <span>작업 시간</span>
-            <b id="durationVal">—</b>
-          </div>
-        </section>
-
-        <!-- Keterangan -->
-        <section class="card card-wide">
-          <div class="card-head">
-            <span class="tag tag-lav">04</span>
-            <h2>정지 내역 및 비고</h2>
-          </div>
-          <label class="field">
-            <span class="lbl sr-only">정지 내역 및 비고</span>
-            <textarea name="remark" rows="4" placeholder="설비 정지 사유, 공구 교체, 특이사항 등"></textarea>
-          </label>
-        </section>
-      </div>
-
-      <div class="submit-bar">
-        <button type="button" id="resetBtn" class="btn btn-ghost">초기화</button>
-        <button type="submit" class="btn btn-primary btn-lg">저장하기 ✓</button>
-      </div>
-    </form>
-
-    <!-- ============ HISTORY ============ -->
-    <section class="card history" id="history">
-      <div class="card-head hist-head">
-        <div class="hist-title">
-          <span class="tag tag-sky">05</span>
-          <h2>작업 이력</h2>
-        </div>
-        <button type="button" id="copyAllBtn" class="btn btn-sm btn-lemon">📋 전체 복사</button>
-      </div>
-
-      <div class="filters">
-        <label class="field">
-          <span class="lbl">시작일</span>
-          <input type="date" id="fFrom">
-        </label>
-        <label class="field">
-          <span class="lbl">종료일</span>
-          <input type="date" id="fTo">
-        </label>
-        <div class="field f-shift">
+        <div class="field">
           <span class="lbl">근무</span>
-          <div class="seg seg-3" role="radiogroup" aria-label="근무 필터">
-            <label><input type="radio" name="fshift" value="all" checked><span>전체</span></label>
-            <label><input type="radio" name="fshift" value="주간"><span>주간</span></label>
-            <label><input type="radio" name="fshift" value="야간"><span>야간</span></label>
+          <div class="seg" role="radiogroup" aria-label="근무 구분">
+            <label><input type="radio" name="shift" value="주간" checked><span>☀ 주간</span></label>
+            <label><input type="radio" name="shift" value="야간"><span>☾ 야간</span></label>
           </div>
         </div>
-        <div class="field f-today">
-          <span class="lbl">&nbsp;</span>
-          <button type="button" id="todayBtn" class="btn">오늘</button>
-        </div>
       </div>
-
-      <div class="stats" id="stats"></div>
-
-      <div class="table-wrap" id="tableWrap">
-        <table>
-          <thead>
-            <tr>
-              <th>#</th>
-              <th>날짜</th>
-              <th>근무</th>
-              <th>작업자</th>
-              <th>설비명</th>
-              <th>품명</th>
-              <th>발주처</th>
-              <th>생산 현황</th>
-              <th class="num">양품</th>
-              <th class="num">불량</th>
-              <th>시작</th>
-              <th>종료</th>
-              <th>정지 내역 및 비고</th>
-              <th class="actions-th">Action</th>
-            </tr>
-          </thead>
-          <tbody id="tbody"></tbody>
-        </table>
-      </div>
-
-      <div class="mobile-list" id="mobileList"></div>
-
-      <div class="empty" id="emptyState" hidden>
-        <div class="empty-ico">🗂</div>
-        <p>선택한 기간에 기록이 없습니다.</p>
-      </div>
+      <p class="work-hours">근무시간 <span id="whDay">(주간) 07:30~18:30</span> / <span id="whSat">(토) 07:30~16:00</span></p>
     </section>
 
-    <p class="foot">데이터는 공장 서버(Supabase)에 저장되어 모든 기기에서 공유됩니다. 오프라인일 때 입력한 기록은 연결되면 자동 전송됩니다.</p>
+    <!-- ============ TABEL ISIAN ============ -->
+    <section class="card sheet-card">
+      <div class="card-head sheet-toolbar">
+        <div class="hist-title">
+          <span class="tag tag-mint">작업</span>
+          <h2>작업 내역</h2>
+        </div>
+        <div class="toolbar-actions">
+          <span class="sheet-stats" id="sheetStats"></span>
+          <button type="button" id="copyAllBtn" class="btn btn-sm btn-lemon">📋 표 전체 복사</button>
+        </div>
+      </div>
+
+      <div class="col-copy">
+        <span class="lbl">열 복사</span>
+        <div class="chips" id="colChips"></div>
+      </div>
+
+      <div class="sheet-wrap">
+        <div class="sheet" id="sheet">
+          <div class="srow shead" id="sheetHead"></div>
+          <div id="rows"></div>
+          <div class="srow sfoot" id="totals"></div>
+        </div>
+      </div>
+      <p class="sheet-hint">맨 아래 <b>+</b> 줄에 입력하면 새 작업이 추가됩니다. 입력한 내용은 자동 저장되며, 저장 후에도 바로 수정할 수 있습니다.</p>
+    </section>
+
+    <!-- ============ 특이사항 ============ -->
+    <section class="card">
+      <div class="card-head">
+        <span class="tag tag-lav">※</span>
+        <h2>특이사항</h2>
+      </div>
+      <label class="field">
+        <span class="lbl sr-only">특이사항</span>
+        <textarea id="noteText" rows="3" placeholder="이 근무조의 특이사항"></textarea>
+      </label>
+    </section>
+
+    <div class="submit-bar">
+      <button type="button" id="addRowBtn" class="btn btn-sky">＋ 작업 추가</button>
+      <button type="button" id="saveBtn" class="btn btn-primary btn-lg">저장 ✓</button>
+    </div>
+
+    <p class="foot">데이터는 공장 서버(Supabase)에 저장되어 모든 기기에서 공유됩니다. 오프라인일 때 입력한 내용은 연결되면 자동 전송됩니다.</p>
   </main>
 
   <datalist id="dl_worker"></datalist>
@@ -239,7 +129,6 @@
   <datalist id="dl_client"></datalist>
   <datalist id="dl_process"></datalist>
 
-  <!-- Toast -->
   <div id="toasts" class="toasts" aria-live="polite" aria-atomic="true"></div>
 
   <!-- Custom modal (pengganti alert/confirm) -->

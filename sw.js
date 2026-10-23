@@ -5,9 +5,9 @@ const CACHE = 'cwjm-worklog-v3';
 const ASSETS = [
   './',
   './index.html',
-  './style.css',
-  './app.js',
-  './config.js',
+  './style.css?v=3',
+  './app.js?v=3',
+  './config.js?v=3',
   './manifest.json',
   './icons/icon-192.png',
   './icons/icon-512.png',

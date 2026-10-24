@@ -300,10 +300,7 @@ textarea { resize: vertical; line-height: 1.5; }
 @keyframes flash { 0%, 35% { background: var(--lemon); } }
 .srow.removing { opacity: 0; transition: opacity .25s; }
 
-/* Baris kosong "+" untuk input baru */
-.srow.blank .cell { border-bottom-style: dashed; }
-.srow.blank .c-idx { color: var(--ink); font-size: 1.2rem; }
-.srow.blank input, .srow.blank textarea { opacity: .7; }
+/* Baris kosong: tombol hapus disembunyikan */
 .srow.blank .del-btn { visibility: hidden; }
 
 /* Baris total */
@@ -437,7 +434,6 @@ body.kb-open .submit-bar { padding-bottom: 10px; }
     border: var(--bw) solid var(--ink); border-radius: 10px;
     box-shadow: 4px 4px 0 var(--shadow);
   }
-  #rows .srow.blank { border-style: dashed; box-shadow: none; }
   .cell {
     grid-column: span 3;
     flex-direction: column; align-items: stretch; gap: 4px;

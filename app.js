@@ -463,8 +463,11 @@
     const d = dateEl.value ? new Date(dateEl.value + 'T00:00:00') : null;
     $('#docDate').textContent = d ? `(${d.getFullYear()}. ${pad(d.getMonth() + 1)}. ${pad(d.getDate())} ${DOW[d.getDay()]}) · ${getShift()}` : '';
     const sat = d && d.getDay() === 6;
-    $('#whDay').classList.toggle('on', getShift() === '주간' && !sat);
-    $('#whSat').classList.toggle('on', getShift() === '주간' && sat);
+    const h = WORK_HOURS[getShift()];
+    $('#whDay').textContent = `(${getShift()}) ${h.week}`;
+    $('#whSat').textContent = `(토) ${h.sat}`;
+    $('#whDay').classList.toggle('on', !!d && !sat);
+    $('#whSat').classList.toggle('on', !!sat);
   }
 
   function shiftDate(days) {
@@ -479,6 +482,11 @@
   dateEl.addEventListener('change', () => { if (dateEl.value) loadSheet(); });
   $$('input[name="shift"]').forEach(r => r.addEventListener('change', loadSheet));
 
+  // Jam kerja: 주간 07:30~19:00 (토 07:30~16:00) · 야간 19:00~07:30 (토 16:00~00:30)
+  const WORK_HOURS = {
+    '주간': { week: '07:30~19:00', sat: '07:30~16:00' },
+    '야간': { week: '19:00~07:30', sat: '16:00~00:30' }
+  };
   // Default: sebelum 07:30 dianggap lanjutan 야간 hari sebelumnya
   function setDefaultSheet() {
     const now = new Date();
@@ -488,7 +496,8 @@
       dateEl.value = ymd(y); setShift('야간');
     } else {
       dateEl.value = ymd(now);
-      setShift(mins < 1110 ? '주간' : '야간');
+      const dayEnd = now.getDay() === 6 ? 960 : 1140; // 토 16:00, lainnya 19:00
+      setShift(mins < dayEnd ? '주간' : '야간');
     }
   }
 
@@ -542,13 +551,13 @@
       if (c.type === 'calc') {
         cells.push(`<div class="cell calc" data-col="${c.k}">${lbl}<output data-calc="${c.k}"></output></div>`);
       } else if (c.type === 'area') {
-        cells.push(`<label class="cell" data-col="${c.k}">${lbl}<textarea data-k="${c.k}" rows="1" placeholder="${esc(c.label)}"></textarea></label>`);
+        cells.push(`<label class="cell" data-col="${c.k}">${lbl}<textarea data-k="${c.k}" rows="1"></textarea></label>`);
       } else if (c.type === 'num') {
         cells.push(`<label class="cell" data-col="${c.k}">${lbl}<input class="num" data-k="${c.k}" type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="off" enterkeyhint="next"></label>`);
       } else if (c.type === 'time') {
         cells.push(`<label class="cell" data-col="${c.k}">${lbl}<input data-k="${c.k}" type="time"></label>`);
       } else {
-        cells.push(`<label class="cell" data-col="${c.k}">${lbl}<input data-k="${c.k}" type="text" list="${c.list}" autocomplete="off" enterkeyhint="next" placeholder="${esc(c.label)}"></label>`);
+        cells.push(`<label class="cell" data-col="${c.k}">${lbl}<input data-k="${c.k}" type="text" list="${c.list}" autocomplete="off" enterkeyhint="next"></label>`);
       }
     });
     cells.push(`<div class="cell c-del"><button type="button" class="del-btn" data-action="del" aria-label="이 줄 삭제" title="이 줄 삭제">🗑</button></div>`);
@@ -558,7 +567,7 @@
 
   function fillRow(el, r, i) {
     el.classList.toggle('blank', !!r.blank);
-    el.querySelector('.idx').innerHTML = r.blank ? '<b>＋</b><span class="m-only"> 새 작업</span>' : `${i + 1}${pendingRow(r.id) ? '<span class="pend" title="저장 대기">⏳</span>' : ''}`;
+    el.querySelector('.idx').innerHTML = `${i + 1}${!r.blank && pendingRow(r.id) ? '<span class="pend" title="저장 대기">⏳</span>' : ''}`;
     const active = document.activeElement;
     $$('[data-k]', el).forEach(inp => {
       if (inp === active) return;
@@ -584,27 +593,25 @@
   }
   const realRows = () => sheetRows().filter(r => !r.blank);
 
-  // Selalu sediakan satu baris kosong "+" di paling bawah
+  // Baris kosong siap isi (tanpa isian otomatis):
+  // PC minimal 11 baris seperti form kertas, HP 2 kartu kosong; tombol 작업 추가 menambah lagi.
+  const extraBlanks = {};
+  const isMobile = () => innerWidth < 900;
   function ensureBlank() {
     const d = dateEl.value, s = getShift();
     if (!d) return;
-    const real = realRows();
-    const last = real[real.length - 1];
-    let blank = allRecords().find(r => r.date === d && r.shift === s && r.blank);
-    const prefill = {
-      worker: last ? last.worker : '',
-      machine: last ? last.machine : '',
-      start: last && last.end ? last.end : (s === '주간' ? '07:30' : '')
-    };
-    if (!blank) {
-      blank = {
-        id: uid(), date: d, shift: s, item: '', client: '', process: '',
-        good: null, bad: null, downtime: null, end: '', remark: '',
-        createdAt: Date.now(), blank: true, ...prefill
+    const real = realRows().length;
+    const have = allRecords().filter(r => r.date === d && r.shift === s && r.blank).length;
+    const want = Math.max(isMobile() ? 2 : 3, (isMobile() ? 0 : 11) - real) + (extraBlanks[sheetKey()] || 0);
+    const base = Date.now();
+    for (let i = have; i < want; i++) {
+      const r = {
+        id: uid(), date: d, shift: s,
+        worker: '', machine: '', item: '', client: '', process: '',
+        good: null, bad: null, downtime: null, start: '', end: '', remark: '',
+        createdAt: base + i, blank: true
       };
-      cache[blank.id] = blank;
-    } else {
-      Object.assign(blank, prefill);
+      cache[r.id] = r;
     }
   }
 
@@ -628,7 +635,7 @@
     const list = sheetRows();
     list.forEach((r, i) => {
       const el = rowsEl.querySelector(`[data-id="${r.id}"]`);
-      if (el && !r.blank) el.querySelector('.idx').innerHTML = `${i + 1}${pendingRow(r.id) ? '<span class="pend" title="저장 대기">⏳</span>' : ''}`;
+      if (el) el.querySelector('.idx').innerHTML = `${i + 1}${!r.blank && pendingRow(r.id) ? '<span class="pend" title="저장 대기">⏳</span>' : ''}`;
     });
   }
 
@@ -772,13 +779,17 @@
 
   /* ---------- Tombol tambah & simpan ---------- */
   $('#addRowBtn').addEventListener('click', () => {
+    const key = sheetKey();
+    const before = rowsEl.querySelectorAll('.srow.blank').length;
+    extraBlanks[key] = (extraBlanks[key] || 0) + (isMobile() ? 1 : 5);
     syncSheet();
-    const blank = rowsEl.querySelector('.srow.blank');
-    if (!blank) return;
-    blank.scrollIntoView({ block: 'center', behavior: 'smooth' });
-    const target = blank.querySelector('[data-k="item"]');
-    setTimeout(() => target.focus({ preventScroll: true }), 250);
+    const blanks = rowsEl.querySelectorAll('.srow.blank');
+    const target = blanks[Math.min(before, blanks.length - 1)] || blanks[0];
+    if (!target) return;
+    target.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    setTimeout(() => target.querySelector('[data-k="worker"]').focus({ preventScroll: true }), 250);
   });
+  window.addEventListener('resize', () => { clearTimeout(window.__rs); window.__rs = setTimeout(syncSheet, 200); });
 
   $('#saveBtn').addEventListener('click', async () => {
     if (document.activeElement && document.activeElement.blur) document.activeElement.blur();

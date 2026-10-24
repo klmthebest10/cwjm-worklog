@@ -13,7 +13,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="작업일보">
-  <link rel="stylesheet" href="style.css?v=3">
+  <link rel="stylesheet" href="style.css?v=4">
   <script>
     try {
       var p = JSON.parse(localStorage.getItem('cwjm_prefs_v1') || '{}');
@@ -27,7 +27,6 @@
   <!-- ============ TOP BAR ============ -->
   <header class="topbar">
     <div class="brand">
-      <span class="logo" aria-hidden="true">CW</span>
       <div class="brand-text">
         <h1>창원정밀 작업일보</h1>
         <p class="sub">일일 설비 · 생산 기록</p>
@@ -72,7 +71,7 @@
           </div>
         </div>
       </div>
-      <p class="work-hours">근무시간 <span id="whDay">(주간) 07:30~18:30</span> / <span id="whSat">(토) 07:30~16:00</span></p>
+      <p class="work-hours">근무시간 <span id="whDay">(주간) 07:30~19:00</span> / <span id="whSat">(토) 07:30~16:00</span></p>
     </section>
 
     <!-- ============ TABEL ISIAN ============ -->
@@ -146,7 +145,7 @@
     </div>
   </div>
 
-  <script src="config.js?v=3"></script>
-  <script src="app.js?v=3"></script>
+  <script src="config.js?v=4"></script>
+  <script src="app.js?v=4"></script>
 </body>
 </html>

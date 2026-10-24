@@ -446,8 +446,7 @@
       await alertModal('연결 실패', `${netMessage(err)}\n\nURL과 키, 그리고 setup.sql 실행 여부를 확인해 주세요.`, 'danger');
     }
   }
-  $('#settingsBtn').addEventListener('click', openSettings);
-  $('#syncPill').addEventListener('click', () => { if (!getConfig().ok) openSettings(); else pull({ manual: true }); });
+  $('#syncPill').addEventListener('click', () => { if (getConfig().ok) pull({ manual: true }); });
 
   /* ==========================================================
      HEADER: tanggal & 근무
@@ -986,9 +985,6 @@
   refreshDatalists();
   loadSheet();
   updateStatus();
-  if (!getConfig().ok && !prefs.cfgPrompted) {
-    prefs.cfgPrompted = true;
-    writeJSON(PREF, prefs);
-    openSettings();
-  }
+  // Pengaturan server disembunyikan; koneksi diambil dari config.js
+  void openSettings;
 })();

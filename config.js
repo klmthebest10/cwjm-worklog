@@ -8,6 +8,6 @@
    JANGAN pernah memasukkan service_role / secret key di sini.
    ========================================================== */
 window.CWJM_CONFIG = {
-  SUPABASE_URL: '',
-  SUPABASE_KEY: ''
+  SUPABASE_URL: 'https://tnsoroccmfmqgvditagn.supabase.co',
+  SUPABASE_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRuc29yb2NjbWZtcWd2ZGl0YWduIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE0NTYyMDMsImV4cCI6MjEwNzAzMjIwM30.6DYY5zp-9hEY-yqUK3I5LGx4SvzMJDN3rhFWEUln-vY'
 };

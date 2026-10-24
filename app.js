@@ -543,7 +543,9 @@
     const el = document.createElement('div');
     el.className = 'srow';
     el.dataset.id = r.id;
-    const cells = [`<div class="cell c-idx"><span class="idx"></span></div>`];
+    const cells = [`<div class="cell c-idx"><span class="idx"></span><span class="mv">` +
+      `<button type="button" class="mv-btn" data-action="up" aria-label="위로 이동" title="위로 이동">▲</button>` +
+      `<button type="button" class="mv-btn" data-action="down" aria-label="아래로 이동" title="아래로 이동">▼</button></span></div>`];
     COLS.forEach(c => {
       const lbl = `<span class="m-lbl">${esc(c.label)}</span>`;
       if (c.type === 'calc') {
@@ -563,7 +565,10 @@
     return el;
   }
 
-  function fillRow(el, r, i) {
+  function fillRow(el, r, i, total) {
+    const up = el.querySelector('[data-action="up"]'), down = el.querySelector('[data-action="down"]');
+    if (up) up.disabled = i === 0;
+    if (down) down.disabled = i === total - 1;
     el.classList.toggle('blank', !!r.blank);
     el.querySelector('.idx').innerHTML = `${i + 1}${!r.blank && pendingRow(r.id) ? '<span class="pend" title="저장 대기">⏳</span>' : ''}`;
     const active = document.activeElement;
@@ -623,7 +628,7 @@
       if (el) existing.delete(r.id);
       else el = buildRow(r);
       if (rowsEl.children[i] !== el) rowsEl.insertBefore(el, rowsEl.children[i] || null);
-      fillRow(el, r, i);
+      fillRow(el, r, i, list.length);
     });
     existing.forEach(el => el.remove());
     renderTotals();
@@ -730,6 +735,8 @@
 
   // Hapus baris
   rowsEl.addEventListener('click', async e => {
+    const mv = e.target.closest('[data-action="up"], [data-action="down"]');
+    if (mv) { moveRow(mv.closest('.srow').dataset.id, mv.dataset.action === 'up' ? -1 : 1, mv.dataset.action); return; }
     const b = e.target.closest('[data-action="del"]');
     if (!b) return;
     const rowEl = b.closest('.srow');
@@ -767,6 +774,31 @@
       toast('삭제되었습니다', 'info');
     }, 250);
   });
+
+  // Pindah urutan: tukar waktu urut (createdAt) dengan baris tetangga, lalu simpan keduanya
+  function moveRow(id, dir, action) {
+    const list = sheetRows();
+    const i = list.findIndex(r => r.id === id);
+    const j = i + dir;
+    if (i < 0 || j < 0 || j >= list.length) return;
+    const a = list[i], b = list[j];
+    let ta = a.createdAt, tb = b.createdAt;
+    if (ta === tb) tb = ta + dir; // jaga-jaga jika waktunya sama
+    a.createdAt = tb; b.createdAt = ta;
+    [a, b].forEach(r => { if (!r.blank) { clearTimeout(saveTimers.get(r.id)); saveTimers.delete(r.id); enqueue({ op: 'upsert', id: r.id }); } });
+    saveCache();
+    syncSheet();
+    const el = rowsEl.querySelector(`[data-id="${id}"]`);
+    if (el) {
+      el.classList.remove('moved'); void el.offsetWidth; el.classList.add('moved');
+      el.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+      const btn = el.querySelector(`[data-action="${action}"]`);
+      (btn && !btn.disabled ? btn : el.querySelector('.mv-btn:not(:disabled)'))?.focus({ preventScroll: true });
+    }
+    renderPendingMarks();
+    updateStatus();
+    flush();
+  }
 
   // Tinggi textarea mengikuti isi
   function autoGrow(t) {

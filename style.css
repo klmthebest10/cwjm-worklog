@@ -234,7 +234,7 @@ textarea { resize: vertical; line-height: 1.5; }
   background: var(--field);
 }
 .sheet {
-  --cols: 46px 96px 110px minmax(150px, 1.5fr) 112px minmax(120px, 1fr) 72px 72px 118px 118px minmax(180px, 1.7fr) 54px;
+  --cols: 70px 96px 108px minmax(150px, 1.5fr) 110px minmax(116px, 1fr) 70px 70px 116px 116px minmax(160px, 1.6fr) 54px;
   min-width: 1240px;
 }
 .srow { display: grid; grid-template-columns: var(--cols); }
@@ -283,7 +283,18 @@ textarea { resize: vertical; line-height: 1.5; }
   width: 100%; padding: 0 8px; text-align: right;
   font-weight: 900; font-variant-numeric: tabular-nums;
 }
-.c-idx { justify-content: center; font-weight: 900; color: var(--muted); font-variant-numeric: tabular-nums; }
+.c-idx { justify-content: center; gap: 6px; font-weight: 900; color: var(--muted); font-variant-numeric: tabular-nums; }
+.mv { display: flex; flex-direction: column; gap: 3px; }
+.mv-btn {
+  font: inherit; font-size: .62rem; line-height: 1;
+  width: 24px; height: 18px; padding: 0;
+  border: 2px solid var(--ink); border-radius: 4px;
+  background: var(--sky); color: var(--on-accent);
+  box-shadow: 1px 1px 0 var(--shadow); cursor: pointer;
+}
+.mv-btn:active { transform: translate(1px, 1px); box-shadow: none; }
+.mv-btn:disabled { opacity: .3; cursor: default; box-shadow: none; }
+#rows .srow.moved .cell { animation: flash 1s ease-out; }
 .c-del { justify-content: center; }
 .del-btn {
   font: inherit; width: 34px; height: 34px;
@@ -441,7 +452,9 @@ body.kb-open .submit-bar { padding-bottom: 10px; }
   .m-only { display: inline; }
   .m-lbl { display: block; font-size: .74rem; font-weight: 800; color: var(--muted); }
   .cell[data-col="item"], .cell[data-col="remark"] { grid-column: span 6; }
-  .c-idx { order: -2; flex-direction: row; align-items: center; justify-content: flex-start; font-size: .95rem; color: var(--ink); }
+  .c-idx { order: -2; flex-direction: row; align-items: center; justify-content: flex-start; gap: 10px; font-size: .95rem; color: var(--ink); }
+  .mv { flex-direction: row; gap: 8px; }
+  .mv-btn { width: 40px; height: 34px; font-size: .85rem; border-width: 2px; box-shadow: 2px 2px 0 var(--shadow); }
   .c-del { order: -1; flex-direction: row; align-items: center; justify-content: flex-end; }
   .cell input, .cell textarea {
     font-size: 16px; min-height: 46px; padding: 10px 11px;

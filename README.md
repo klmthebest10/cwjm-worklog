@@ -20,10 +20,10 @@ naikkan versi `CACHE` di `sw.js` agar perangkat mengambil versi baru.
 
 ## Cara pakai
 - Pilih **날짜** dan **주간/야간** di atas → satu lembar 작업일보.
-- Isi tabel seperti form kertas. Baris **＋** paling bawah = baris baru; begitu diisi, baris berikutnya muncul otomatis
-  (작업자, 설비명 dan 시작 diisi dari baris sebelumnya).
-- 시간(분) = 종료 − 시작, 순작업시간(분) = 시간 − 비가동시간 (dihitung otomatis).
-- Semua isian tersimpan otomatis dan bisa diedit kapan saja. Tombol 🗑 menghapus baris (ada konfirmasi).
+  Jam kerja: 주간 07:30~19:00 (토 07:30~16:00) · 야간 19:00~07:30 (토 16:00~00:30). Kalau hari Minggu masuk, label (토) berubah jadi (일).
+- Lembar baru berisi 1 baris kosong; tombol **＋ 작업 추가** menambah baris. Tidak ada isian otomatis.
+- Semua isian tersimpan otomatis tanpa menekan 저장, dan bisa diedit kapan saja.
+- Setiap baris punya tombol 🗑 dengan konfirmasi sebelum dihapus.
 - **Copy per kolom:** tombol 📋 di judul kolom (PC) atau chip "열 복사" (HP). Kolom yang sudah disalin berwarna hijau.
 
 ## Cara kerja sinkron

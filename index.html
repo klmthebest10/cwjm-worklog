@@ -13,7 +13,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="작업일보">
-  <link rel="stylesheet" href="style.css?v=4">
+  <link rel="stylesheet" href="style.css?v=5">
   <script>
     try {
       var p = JSON.parse(localStorage.getItem('cwjm_prefs_v1') || '{}');
@@ -99,7 +99,7 @@
           <div class="srow sfoot" id="totals"></div>
         </div>
       </div>
-      <p class="sheet-hint">맨 아래 <b>+</b> 줄에 입력하면 새 작업이 추가됩니다. 입력한 내용은 자동 저장되며, 저장 후에도 바로 수정할 수 있습니다.</p>
+      <p class="sheet-hint"><b>＋ 작업 추가</b>를 누르면 새 줄이 추가됩니다. 입력한 내용은 <b>저장 버튼을 누르지 않아도 자동 저장</b>되며, 저장 후에도 바로 수정할 수 있습니다.</p>
     </section>
 
     <!-- ============ 특이사항 ============ -->
@@ -119,7 +119,7 @@
       <button type="button" id="saveBtn" class="btn btn-primary btn-lg">저장 ✓</button>
     </div>
 
-    <p class="foot">데이터는 공장 서버(Supabase)에 저장되어 모든 기기에서 공유됩니다. 오프라인일 때 입력한 내용은 연결되면 자동 전송됩니다.</p>
+    <p class="foot">입력한 내용은 자동으로 공장 서버에 저장되어 모든 기기에서 공유됩니다. 오프라인일 때 입력한 내용은 연결되면 자동 전송됩니다.</p>
   </main>
 
   <datalist id="dl_worker"></datalist>
@@ -145,7 +145,7 @@
     </div>
   </div>
 
-  <script src="config.js?v=4"></script>
-  <script src="app.js?v=4"></script>
+  <script src="config.js?v=5"></script>
+  <script src="app.js?v=5"></script>
 </body>
 </html>

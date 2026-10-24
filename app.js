@@ -31,14 +31,11 @@
     { k: 'bad',      label: '불량',             type: 'num', group: true },
     { k: 'start',    label: '시작',             type: 'time' },
     { k: 'end',      label: '종료',             type: 'time' },
-    { k: 'minutes',  label: '시간(분)',         type: 'calc' },
-    { k: 'downtime', label: '비가동시간(분)',   type: 'num' },
-    { k: 'net',      label: '순작업시간(분)',   type: 'calc' },
     { k: 'remark',   label: '정지내역 및 비고', type: 'area' }
   ];
   const INPUT_COLS = COLS.filter(c => c.type !== 'calc');
   const TEXT_KEYS = ['worker', 'machine', 'item', 'client', 'process', 'remark'];
-  const NUM_KEYS = ['good', 'bad', 'downtime'];
+  const NUM_KEYS = ['good', 'bad'];
 
   /* ---------- Util ---------- */
   const $ = (s, r = document) => r.querySelector(s);
@@ -421,11 +418,11 @@
     const wrap = document.createElement('div');
     wrap.className = 'cfg-form';
     wrap.innerHTML = `
-      <div>Supabase 프로젝트 정보를 입력하세요.<br>모든 기기에 같은 값을 넣으면 하나의 작업일보로 합쳐집니다.</div>
-      <label>Project URL
+      <div>서버(Supabase) 프로젝트 정보를 입력하세요.<br>모든 기기에 같은 값을 넣으면 하나의 작업일보로 합쳐집니다.</div>
+      <label>프로젝트 URL
         <input id="cfgUrl" type="url" inputmode="url" placeholder="https://xxxx.supabase.co" autocomplete="off" autocapitalize="off" spellcheck="false">
       </label>
-      <label>Anon / Publishable key
+      <label>API 키 (anon / publishable)
         <input id="cfgKey" type="text" placeholder="eyJ... 또는 sb_publishable_..." autocomplete="off" autocapitalize="off" spellcheck="false">
       </label>
       <div class="cfg-hint">config.js에 미리 입력해 두면 기기마다 입력할 필요가 없습니다. 비워 두고 저장하면 서버 연결이 해제됩니다.</div>`;
@@ -439,7 +436,7 @@
     writeJSON(CFG_KEY, { url, key });
     if (!url || !key) { setNet(false); toast('로컬 모드로 전환했습니다', 'info'); return; }
     try {
-      await api(`${T_ROWS}?select=id,downtime&limit=1`);
+      await api(`${T_ROWS}?select=id&limit=1`);
       await api(`${T_NOTE}?select=date&limit=1`);
       setNet(true);
       toast('서버 연결 성공 ✓');
@@ -462,10 +459,12 @@
   function updateHeaderText() {
     const d = dateEl.value ? new Date(dateEl.value + 'T00:00:00') : null;
     $('#docDate').textContent = d ? `(${d.getFullYear()}. ${pad(d.getMonth() + 1)}. ${pad(d.getDate())} ${DOW[d.getDay()]}) · ${getShift()}` : '';
-    const sat = d && d.getDay() === 6;
+    // Sabtu & Minggu (kalau masuk) memakai jam akhir pekan; labelnya (토) atau (일)
+    const sun = d && d.getDay() === 0;
+    const sat = d && (d.getDay() === 6 || sun);
     const h = WORK_HOURS[getShift()];
     $('#whDay').textContent = `(${getShift()}) ${h.week}`;
-    $('#whSat').textContent = `(토) ${h.sat}`;
+    $('#whSat').textContent = `(${sun ? '일' : '토'}) ${h.sat}`;
     $('#whDay').classList.toggle('on', !!d && !sat);
     $('#whSat').classList.toggle('on', !!sat);
   }
@@ -496,7 +495,7 @@
       dateEl.value = ymd(y); setShift('야간');
     } else {
       dateEl.value = ymd(now);
-      const dayEnd = now.getDay() === 6 ? 960 : 1140; // 토 16:00, lainnya 19:00
+      const dayEnd = (now.getDay() === 6 || now.getDay() === 0) ? 960 : 1140; // 토·일 16:00, lainnya 19:00
       setShift(mins < dayEnd ? '주간' : '야간');
     }
   }
@@ -520,7 +519,7 @@
     const parts = [];
     const place = (html, col, row, span = 1, rowSpan = 1, cls = '') =>
       parts.push(`<div class="hcell ${cls}" style="grid-column:${col} / span ${span};grid-row:${row} / span ${rowSpan}">${html}</div>`);
-    place('No', 1, 1, 1, 2);
+    place('번호', 1, 1, 1, 2);
     let col = 2;
     let groupPlaced = false;
     COLS.forEach(c => {
@@ -589,29 +588,30 @@
     const d = dateEl.value, s = getShift();
     return allRecords()
       .filter(r => r.date === d && r.shift === s)
-      .sort((a, b) => (a.blank ? 1 : 0) - (b.blank ? 1 : 0) || a.createdAt - b.createdAt);
+      .sort((a, b) => a.createdAt - b.createdAt);
   }
   const realRows = () => sheetRows().filter(r => !r.blank);
 
-  // Baris kosong siap isi (tanpa isian otomatis):
-  // PC minimal 11 baris seperti form kertas, HP 2 kartu kosong; tombol 작업 추가 menambah lagi.
-  const extraBlanks = {};
-  const isMobile = () => innerWidth < 900;
+  // Default satu baris kosong; baris berikutnya ditambah lewat tombol 작업 추가
+  function newBlank(auto = false) {
+    const r = {
+      id: uid(), date: dateEl.value, shift: getShift(),
+      worker: '', machine: '', item: '', client: '', process: '',
+      good: null, bad: null, downtime: null, start: '', end: '', remark: '',
+      createdAt: Date.now(), blank: true, auto
+    };
+    cache[r.id] = r;
+    return r;
+  }
   function ensureBlank() {
-    const d = dateEl.value, s = getShift();
-    if (!d) return;
-    const real = realRows().length;
-    const have = allRecords().filter(r => r.date === d && r.shift === s && r.blank).length;
-    const want = Math.max(isMobile() ? 2 : 3, (isMobile() ? 0 : 11) - real) + (extraBlanks[sheetKey()] || 0);
-    const base = Date.now();
-    for (let i = have; i < want; i++) {
-      const r = {
-        id: uid(), date: d, shift: s,
-        worker: '', machine: '', item: '', client: '', process: '',
-        good: null, bad: null, downtime: null, start: '', end: '', remark: '',
-        createdAt: base + i, blank: true
-      };
-      cache[r.id] = r;
+    if (!dateEl.value) return;
+    const rows = sheetRows();
+    if (!rows.length) { newBlank(true); return; }
+    // Ada data dari perangkat lain → baris kosong default tidak diperlukan lagi
+    if (rows.some(r => !r.blank)) {
+      rows.forEach(r => {
+        if (r.blank && r.auto && !(document.activeElement && document.activeElement.closest && document.activeElement.closest(`[data-id="${r.id}"]`))) delete cache[r.id];
+      });
     }
   }
 
@@ -645,9 +645,7 @@
     const cells = [`<div class="fcell flabel" style="grid-column:1 / span 5">합계 (${list.length}건)</div>`, `<div class="fcell" style="grid-column:6"></div>`];
     const at = (k, col) => cells.push(`<div class="fcell" style="grid-column:${col}">${fmtN(sum(k))}</div>`);
     at('good', 7); at('bad', 8);
-    cells.push(`<div class="fcell" style="grid-column:9 / span 2"></div>`);
-    at('minutes', 11); at('downtime', 12); at('net', 13);
-    cells.push(`<div class="fcell" style="grid-column:14 / span 2"></div>`);
+    cells.push(`<div class="fcell" style="grid-column:9 / span 4"></div>`);
     totalsEl.innerHTML = cells.join('');
     $('#sheetStats').innerHTML = `작업 <b>${list.length}</b>건 · 양품 <b>${fmtN(sum('good'))}</b> · 불량 <b>${fmtN(sum('bad'))}</b>`;
   }
@@ -662,7 +660,6 @@
     if (!r || r.blank) return;
     enqueue({ op: 'upsert', id });
     saveCache();
-    syncSheet();          // perbarui isian awal baris "+" (작업자·설비명·시작)
     refreshDatalists();
     flush();
   }
@@ -685,11 +682,9 @@
     if (inp.tagName === 'TEXTAREA') autoGrow(inp);
 
     if (r.blank) {
-      // Baris "+" disentuh → jadi baris nyata, siapkan baris "+" baru
+      // Baris kosong mulai diisi → jadi baris nyata (posisinya tetap)
       r.blank = false;
-      r.createdAt = Date.now();
       rowEl.classList.remove('blank');
-      syncSheet();
     }
     updateCalc(rowEl, r);
     renderTotals();
@@ -724,24 +719,31 @@
     const rowEl = b.closest('.srow');
     const id = rowEl.dataset.id;
     const r = cache[id];
-    if (!r || r.blank) return;
-    const n = realRows().indexOf(r) + 1;
+    if (!r) return;
+    const n = sheetRows().indexOf(r) + 1;
     const msg = document.createElement('div');
-    msg.append(`${n}번 줄을 삭제할까요? 모든 기기에서 삭제되며 되돌릴 수 없습니다.`);
-    const sum = document.createElement('div');
-    sum.className = 'modal-summary';
-    sum.innerHTML = `<b>${esc(r.worker || '-')} · ${esc(r.machine || '-')}</b><br>${esc(r.item || '(품명 없음)')}${r.client ? ' / ' + esc(r.client) : ''}<br>양품 ${fmtN(r.good)} · 불량 ${fmtN(r.bad)} · ${esc(r.start || '--:--')}~${esc(r.end || '--:--')}`;
-    msg.appendChild(sum);
-    const ok = await openModal({ title: '줄 삭제', message: msg, variant: 'danger', confirmText: '삭제', cancelText: '취소' });
+    if (r.blank || !hasContent(r)) {
+      msg.append(`${n}번 작업(빈 줄)을 삭제할까요?`);
+    } else {
+      msg.append(`${n}번 작업을 삭제할까요?\n모든 기기에서 삭제되며 되돌릴 수 없습니다.`);
+      const sum = document.createElement('div');
+      sum.className = 'modal-summary';
+      sum.innerHTML = `<b>${esc(r.worker || '-')} · ${esc(r.machine || '-')}</b><br>${esc(r.item || '(품명 없음)')}${r.client ? ' / ' + esc(r.client) : ''}<br>양품 ${fmtN(r.good)} · 불량 ${fmtN(r.bad)} · ${esc(r.start || '--:--')}~${esc(r.end || '--:--')}`;
+      msg.appendChild(sum);
+    }
+    const ok = await openModal({ title: '작업 삭제', message: msg, variant: 'danger', confirmText: '삭제', cancelText: '취소' });
     if (!ok) return;
 
     rowEl.classList.add('removing');
     setTimeout(() => {
       clearTimeout(saveTimers.get(id));
       saveTimers.delete(id);
+      const wasSaved = !r.blank;
       delete cache[id];
-      outbox = outbox.filter((o, idx) => !(o.op === 'upsert' && o.id === id && !(sending && idx === 0)));
-      enqueue({ op: 'delete', id });
+      if (wasSaved) {
+        outbox = outbox.filter((o, idx) => !(o.op === 'upsert' && o.id === id && !(sending && idx === 0)));
+        enqueue({ op: 'delete', id });
+      }
       saveCache();
       syncSheet();
       refreshDatalists();
@@ -779,17 +781,13 @@
 
   /* ---------- Tombol tambah & simpan ---------- */
   $('#addRowBtn').addEventListener('click', () => {
-    const key = sheetKey();
-    const before = rowsEl.querySelectorAll('.srow.blank').length;
-    extraBlanks[key] = (extraBlanks[key] || 0) + (isMobile() ? 1 : 5);
+    const r = newBlank();
     syncSheet();
-    const blanks = rowsEl.querySelectorAll('.srow.blank');
-    const target = blanks[Math.min(before, blanks.length - 1)] || blanks[0];
+    const target = rowsEl.querySelector(`[data-id="${r.id}"]`);
     if (!target) return;
     target.scrollIntoView({ block: 'center', behavior: 'smooth' });
     setTimeout(() => target.querySelector('[data-k="worker"]').focus({ preventScroll: true }), 250);
   });
-  window.addEventListener('resize', () => { clearTimeout(window.__rs); window.__rs = setTimeout(syncSheet, 200); });
 
   $('#saveBtn').addEventListener('click', async () => {
     if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
@@ -859,7 +857,7 @@
       copiedCols[key] = { ...(copiedCols[key] || {}), [k]: Date.now() };
       writeJSON(COPIED_KEY, copiedCols);
       applyCopied(k);
-      toast(`Tersalin! · ${col.label} (${list.length}줄)`);
+      toast(`복사되었습니다! · ${col.label} (${list.length}건)`);
     } else {
       await copyFailed(text);
     }
@@ -875,7 +873,7 @@
     const list = realRows().filter(hasContent);
     if (!list.length) { toast('복사할 작업이 없습니다', 'info'); return; }
     const text = list.map(r => COLS.map(c => cellText(r, c.k)).join('\t')).join('\n');
-    if (await copyText(text)) toast(`Tersalin! · 표 전체 (${list.length}줄)`);
+    if (await copyText(text)) toast(`복사되었습니다! · 표 전체 (${list.length}건)`);
     else await copyFailed(text);
   });
 

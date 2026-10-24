@@ -234,8 +234,8 @@ textarea { resize: vertical; line-height: 1.5; }
   background: var(--field);
 }
 .sheet {
-  --cols: 40px 92px 104px minmax(140px, 1.3fr) 100px minmax(110px, 1fr) 66px 66px 114px 114px 62px 76px 76px minmax(160px, 1.4fr) 48px;
-  min-width: 1340px;
+  --cols: 46px 96px 110px minmax(150px, 1.5fr) 112px minmax(120px, 1fr) 72px 72px 118px 118px minmax(180px, 1.7fr) 54px;
+  min-width: 1240px;
 }
 .srow { display: grid; grid-template-columns: var(--cols); }
 
@@ -300,8 +300,7 @@ textarea { resize: vertical; line-height: 1.5; }
 @keyframes flash { 0%, 35% { background: var(--lemon); } }
 .srow.removing { opacity: 0; transition: opacity .25s; }
 
-/* Baris kosong: tombol hapus disembunyikan */
-.srow.blank .del-btn { visibility: hidden; }
+
 
 /* Baris total */
 .sfoot .fcell {
@@ -442,7 +441,6 @@ body.kb-open .submit-bar { padding-bottom: 10px; }
   .m-only { display: inline; }
   .m-lbl { display: block; font-size: .74rem; font-weight: 800; color: var(--muted); }
   .cell[data-col="item"], .cell[data-col="remark"] { grid-column: span 6; }
-  .cell[data-col="minutes"], .cell[data-col="downtime"], .cell[data-col="net"] { grid-column: span 2; }
   .c-idx { order: -2; flex-direction: row; align-items: center; justify-content: flex-start; font-size: .95rem; color: var(--ink); }
   .c-del { order: -1; flex-direction: row; align-items: center; justify-content: flex-end; }
   .cell input, .cell textarea {

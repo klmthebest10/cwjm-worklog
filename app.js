@@ -550,13 +550,13 @@
       if (c.type === 'calc') {
         cells.push(`<div class="cell calc" data-col="${c.k}">${lbl}<output data-calc="${c.k}"></output></div>`);
       } else if (c.type === 'area') {
-        cells.push(`<label class="cell" data-col="${c.k}">${lbl}<textarea data-k="${c.k}" rows="1"></textarea></label>`);
+        cells.push(`<label class="cell" data-col="${c.k}">${lbl}<textarea data-k="${c.k}" rows="1" autocapitalize="characters"></textarea></label>`);
       } else if (c.type === 'num') {
         cells.push(`<label class="cell" data-col="${c.k}">${lbl}<input class="num" data-k="${c.k}" type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="off" enterkeyhint="next"></label>`);
       } else if (c.type === 'time') {
         cells.push(`<label class="cell" data-col="${c.k}">${lbl}<input data-k="${c.k}" type="time"></label>`);
       } else {
-        cells.push(`<label class="cell" data-col="${c.k}">${lbl}<input data-k="${c.k}" type="text" list="${c.list}" autocomplete="off" enterkeyhint="next"></label>`);
+        cells.push(`<label class="cell" data-col="${c.k}">${lbl}<input data-k="${c.k}" type="text" list="${c.list}" autocomplete="off" autocapitalize="characters" enterkeyhint="next"></label>`);
       }
     });
     cells.push(`<div class="cell c-del"><button type="button" class="del-btn" data-action="del" aria-label="이 줄 삭제" title="이 줄 삭제">🗑</button></div>`);
@@ -665,6 +665,22 @@
   }
   function commitAll() { [...saveTimers.keys()].forEach(commitRow); }
 
+  // Huruf alfabet otomatis kapital (huruf Korea tidak berubah); kursor tetap di tempatnya
+  function toUpper(el) {
+    const v = el.value, up = v.toUpperCase();
+    if (v === up) return;
+    const s = el.selectionStart, en = el.selectionEnd;
+    el.value = up;
+    try { el.setSelectionRange(s, en); } catch { /* input tanpa seleksi */ }
+  }
+  const isTextField = el => el.matches('textarea, input[type="text"]:not(.num)');
+  // Selesai merangkai huruf (IME Korea) → proses ulang sebagai input biasa
+  document.addEventListener('compositionend', e => {
+    if (e.target.matches && (e.target.matches('#rows [data-k]') || e.target === noteEl) && isTextField(e.target)) {
+      e.target.dispatchEvent(new Event('input', { bubbles: true }));
+    }
+  });
+
   rowsEl.addEventListener('input', e => {
     const inp = e.target.closest('[data-k]');
     if (!inp) return;
@@ -672,6 +688,7 @@
     const r = cache[rowEl.dataset.id];
     if (!r) return;
     const k = inp.dataset.k;
+    if (isTextField(inp) && !e.isComposing) toUpper(inp);
     if (NUM_KEYS.includes(k)) {
       const clean = inp.value.replace(/\D/g, '');
       if (clean !== inp.value) inp.value = clean;
@@ -767,7 +784,8 @@
     enqueue({ op: 'note', key: noteEl.dataset.key });
     flush();
   }
-  noteEl.addEventListener('input', () => {
+  noteEl.addEventListener('input', e => {
+    if (!e.isComposing) toUpper(noteEl);
     const key = sheetKey();
     noteEl.dataset.key = key;
     notes[key] = noteEl.value;

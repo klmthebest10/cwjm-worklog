@@ -13,7 +13,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="작업일보">
-  <link rel="stylesheet" href="style.css?v=5">
+  <link rel="stylesheet" href="style.css?v=6">
   <script>
     try {
       var p = JSON.parse(localStorage.getItem('cwjm_prefs_v1') || '{}');
@@ -110,7 +110,7 @@
       </div>
       <label class="field">
         <span class="lbl sr-only">특이사항</span>
-        <textarea id="noteText" rows="3" placeholder="이 근무조의 특이사항"></textarea>
+        <textarea id="noteText" rows="3" autocapitalize="characters" placeholder="이 근무조의 특이사항"></textarea>
       </label>
     </section>
 
@@ -145,7 +145,7 @@
     </div>
   </div>
 
-  <script src="config.js?v=5"></script>
-  <script src="app.js?v=5"></script>
+  <script src="config.js?v=6"></script>
+  <script src="app.js?v=6"></script>
 </body>
 </html>
